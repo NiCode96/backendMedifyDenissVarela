@@ -3,7 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 import dotenv from 'dotenv';
 import mercadoPagoRouter from "./views/mercadoPagoRoutes.js";
 import pedidosRoutes from "./views/pedidosRoutes.js";
@@ -40,31 +40,37 @@ app.use(cookieParser()); // Necesario para leer/escribir cookies (JWT)
 // Servir archivos estáticos desde la carpeta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"], // Permitir todos los puertos
-  credentials: true                // Permite enviar/recibir cookies
-}))
+const corsConfig = {
+    origin: true,           // refleja el origin de la petición (permite cualquier origen)
+    credentials: true,      // permite envío de cookies; poner false si no quieres cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsConfig));
 
 
-app.get("/", (req, res) => { res.send("Hola mundo"); });
+app.get("/", (req, res) => {
+    res.send("Hola mundo");
+});
 
 // Ruta para obtener configuración del sitio
 app.get("/config", (req, res) => {
-  try {
-    const configPath = path.join(__dirname, 'config/site-config.json');
-    
-    if (fs.existsSync(configPath)) {
-      const data = fs.readFileSync(configPath, 'utf8');
-      const config = JSON.parse(data);
-      res.json(config);
-    } else {
-      // Devolver configuración por defecto si no existe el archivo
-      res.json({ fotoPerfil: "nube.png" });
+    try {
+        const configPath = path.join(__dirname, 'config/site-config.json');
+
+        if (fs.existsSync(configPath)) {
+            const data = fs.readFileSync(configPath, 'utf8');
+            const config = JSON.parse(data);
+            res.json(config);
+        } else {
+            // Devolver configuración por defecto si no existe el archivo
+            res.json({fotoPerfil: "nube.png"});
+        }
+    } catch (error) {
+        console.error('Error leyendo configuración:', error);
+        res.json({fotoPerfil: "nube.png"});
     }
-  } catch (error) {
-    console.error('Error leyendo configuración:', error);
-    res.json({ fotoPerfil: "nube.png" });
-  }
 });
 
 app.use("/titulo", tituloRoutes);
@@ -72,7 +78,7 @@ app.use("/pagosMercadoPago", mercadoPagoRouter);
 app.use("/pedidos", pedidosRoutes);
 app.use("/textos", textosRoutes);
 app.use("/proyectos", proyectoRouter);
-app.use('/contacto', contactoRouter )
+app.use('/contacto', contactoRouter)
 app.use('/calendar', calendarRoutes);
 app.use('/pacientes', pacienteRoutes);
 app.use('/ficha', fichaRoutes);
@@ -83,5 +89,5 @@ app.use("/api/cloudinary", cloudinaryRoutes);
 
 // app.set("trust proxy", 1); // Descomenta en producción detrás de proxy (para cookies 'secure')
 app.listen(3001, () => {
-  console.log('http://localhost:3001/')
+    console.log('http://localhost:3001/')
 })
